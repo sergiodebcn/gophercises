@@ -11,17 +11,18 @@ import (
 )
 
 const defaultTimer = 30
+const filename = "problems.csv"
 
 func main() {
-	lines, err := ReadCsv("problems.csv")
+	var numberOfRightAnswers = 0
+
+	lines, err := ReadCsv(filename)
 
 	if err != nil {
 		panic(err)
 	}
 
 	defaultTimer := time.NewTimer(time.Second * defaultTimer)
-	var numberOfRightAnswers = 0
-
 	defer defaultTimer.Stop()
 
 	go func() {
@@ -30,10 +31,19 @@ func main() {
 		// this goroutine is executed until that happens.
 		<-defaultTimer.C
 		// If main() finishes before the second timer, we won't get here
-		fmt.Println("Right Answers: " + strconv.Itoa(numberOfRightAnswers))
-		fmt.Println("Bad Answers: " + strconv.Itoa(len(lines)-numberOfRightAnswers))
+		printResults(numberOfRightAnswers, lines)
 	}()
 
+	numberOfRightAnswers = getAnswersFromUsers(lines, numberOfRightAnswers)
+	printResults(numberOfRightAnswers, lines)
+}
+
+func printResults(numberOfRightAnswers int, lines [][]string) {
+	fmt.Println("Right Answers: " + strconv.Itoa(numberOfRightAnswers))
+	fmt.Println("Bad Answers: " + strconv.Itoa(len(lines)-numberOfRightAnswers))
+}
+
+func getAnswersFromUsers(lines [][]string, numberOfRightAnswers int) int {
 	for _, line := range lines {
 		fmt.Println(line[0] + "=")
 		reader := bufio.NewReader(os.Stdin)
@@ -44,9 +54,7 @@ func main() {
 			numberOfRightAnswers = numberOfRightAnswers + 1
 		}
 	}
-
-	fmt.Println("Right Answers: " + strconv.Itoa(numberOfRightAnswers))
-	fmt.Println("Bad Answers: " + strconv.Itoa(len(lines)-numberOfRightAnswers))
+	return numberOfRightAnswers
 }
 
 // ReadCsv accepts a file and returns its content as a multi-dimentional type
